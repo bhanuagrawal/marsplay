@@ -97,6 +97,7 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
     private Uri uri;
     private float initialWitdh;
     private float initialHeight;
+    private File imgFile;
 
     public UploadImagePreview() {
         // Required empty public constructor
@@ -442,7 +443,18 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
     }
 
     private void createFile(Bitmap bitmap){
-        File imgFile = new  File(filePath);
+        if(uri!= null){
+            imgFile =  new File(getPath(uri));
+            Long tsLong = System.currentTimeMillis()/1000;
+            String ts = tsLong.toString();
+            imgFile = new File(imgFile.getPath() + ts );
+            filePath = imgFile.getPath();
+            uri = null;
+        }
+        else{
+            imgFile = new  File(filePath);
+        }
+
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(imgFile, false);
