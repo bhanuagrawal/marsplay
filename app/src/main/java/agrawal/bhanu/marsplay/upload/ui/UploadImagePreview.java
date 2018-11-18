@@ -210,6 +210,8 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
         });
 
 
+        crop.setVisibility(View.GONE);
+
 
 
         crop.setOnClickListener(new View.OnClickListener() {
