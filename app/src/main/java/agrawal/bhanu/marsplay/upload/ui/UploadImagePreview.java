@@ -1,5 +1,6 @@
 package agrawal.bhanu.marsplay.upload.ui;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -7,10 +8,15 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.FileProvider;
@@ -27,10 +33,18 @@ import android.widget.Toast;
 
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import agrawal.bhanu.marsplay.MainActivity;
 import agrawal.bhanu.marsplay.R;
@@ -68,7 +82,6 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
     @BindView(R.id.crop)
     ImageView crop;
 
-    String mCurrentPhotoPath;
     Button uploadButton, cancelButton;
 
     private Unbinder uibinder;
@@ -82,6 +95,8 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
     private float mScaleFactor = 1.0f;
     private ScaleGestureDetector mScaleGestureDetector;
     private Uri uri;
+    private float initialWitdh;
+    private float initialHeight;
 
     public UploadImagePreview() {
         // Required empty public constructor
@@ -140,40 +155,11 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
             uploadFooter.setVisibility(View.GONE);
             crop.setVisibility(View.GONE);
         }
-        File imgFile = new  File(filePath);
 
 
-        if(imgFile.exists()){
+        loadFile();
 
-            mCurrentPhotoPath = imgFile.getAbsolutePath();
-            //Toast.makeText(Upload.this, filePath, Toast.LENGTH_LONG).show();
-            setPic();
 
-        }
-        else if(uri != null){
-            try {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.placeholder(R.drawable.ic_thumbnail);
-                Glide.with(getContext())
-                        .setDefaultRequestOptions(requestOptions)
-                        .load(uri).into(myImage);
-            }
-            catch (Exception e){
-                Log.d("error", "path not valid");
-            }
-        }
-        else {
-            try {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.placeholder(R.drawable.ic_thumbnail);
-                Glide.with(getContext())
-                        .setDefaultRequestOptions(requestOptions)
-                        .load(filePath).into(myImage);
-            }
-            catch (Exception e){
-                Log.d("error", "path not valid");
-            }
-        }
 
         uploadButton = (Button) rootView.findViewById(R.id.confirmUpload);
 
@@ -210,7 +196,7 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
         });
 
 
-        crop.setVisibility(View.GONE);
+        //crop.setVisibility(View.GONE);
 
 
 
@@ -218,13 +204,23 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
 
             @Override
             public void onClick(View v) {
-/*                RectF rect = myImage.getDisplayRect();
-                Bitmap bitmap = ((BitmapDrawable)myImage.getDrawable()).getBitmap();
-                Bitmap.createBitmap(bitmap, -(int)rect.left, -(int)rect.top, (int)rect.left+100, (int)rect.top+100);
-                myImage.setImageBitmap(bitmap);
-                if(uri== null){
-                    //openCropActivity(FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".my.package.name.provider", new File(filePath)));
-                }*/
+                new Handler(Looper.myLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        myImage.invalidate();
+                        Bitmap original = myImage.getVisibleRectangleBitmap();
+                        createFile(original);
+                        loadFile();
+
+/*                        Fragment frg = getActivity().getSupportFragmentManager().findFragmentByTag(MainActivity.UPLOAD_PREVIEW_FRAGMENT);
+                        Fragment updatedFrg = UploadImagePreview.newInstance("7055553175", filePath, null,  true);
+                        final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                        ft.detach(frg);
+                        ft.attach(updatedFrg);
+                        ft.commit();*/
+                    }
+                });
+
             }
         });
         
@@ -232,6 +228,56 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
 
 
         return rootView;
+    }
+
+    private void loadFile() {
+        final File imgFile = new  File(filePath);
+
+
+        if(imgFile.exists()){
+
+
+            //Toast.makeText(Upload.this, filePath, Toast.LENGTH_LONG).show();
+            setPic();
+
+        }
+        else if(uri != null){
+            try {
+                RequestOptions requestOptions = new RequestOptions();
+                requestOptions.placeholder(R.drawable.ic_thumbnail);
+                Glide.with(getContext())
+                        .setDefaultRequestOptions(requestOptions)
+                        .load(uri).into(myImage);
+            }
+            catch (Exception e){
+                Log.d("error", "path not valid");
+            }
+        }
+        else {
+            try {
+                RequestOptions requestOptions = new RequestOptions();
+                requestOptions.placeholder(R.drawable.ic_thumbnail);
+                Glide.with(getContext())
+                        .setDefaultRequestOptions(requestOptions)
+                        .load(filePath).
+                        listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                return false;
+                            }
+                        }).
+                        into(myImage);
+            }
+            catch (Exception e){
+                Log.d("error", "path not valid");
+            }
+        }
+
     }
 
     private void openCropActivity(Uri ima) {
@@ -306,7 +352,7 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
 
     private void setPic() {
 
-        final File f = new File(mCurrentPhotoPath);
+        final File f = new File(filePath);
 /*        Picasso.get()
                 .load(R.drawable.ic_thumbnail) // thumbnail url goes here
                 .into(myImage, new Callback() {
@@ -329,7 +375,11 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
         requestOptions.placeholder(R.drawable.ic_thumbnail);
         Glide.with(getContext())
                 .setDefaultRequestOptions(requestOptions)
-                .load(f).into(myImage);
+                .load(f)
+                .apply(RequestOptions.skipMemoryCacheOf(true))
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                .into(myImage);
+
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -389,5 +439,27 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
+    }
+
+    private void createFile(Bitmap bitmap){
+        File imgFile = new  File(filePath);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(imgFile, false);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80 /*ignored for PNG*/, bos);
+        byte[] contents = bos.toByteArray();
+        try {
+            out.write(contents);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
