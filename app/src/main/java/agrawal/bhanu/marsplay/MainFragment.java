@@ -78,6 +78,8 @@ public class MainFragment extends Fragment implements ViewPager.OnPageChangeList
 
         adapter = new HomeViewPagerAdapter(getChildFragmentManager());
         adapter.setNUM_ITEMS(2);
+
+        //((MainActivity)getActivity()).removeAllFragments();
     }
 
     @Override
@@ -108,8 +110,11 @@ public class MainFragment extends Fragment implements ViewPager.OnPageChangeList
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.d("currentPage", String.valueOf(homeViewPager.getCurrentItem()));
-        outState.putInt("currentPage", homeViewPager.getCurrentItem());
+        if(isVisible()){
+            Log.d("currentPage", String.valueOf(homeViewPager.getCurrentItem()));
+            outState.putInt("currentPage", homeViewPager.getCurrentItem());
+        }
+
     }
 
 

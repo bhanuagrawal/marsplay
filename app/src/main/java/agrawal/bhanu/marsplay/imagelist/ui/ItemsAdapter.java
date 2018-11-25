@@ -152,11 +152,7 @@ public class ItemsAdapter extends PagedListAdapter<Post, RecyclerView.ViewHolder
         @Override
         public void onClick(View view) {
 
-            activity.getSupportFragmentManager().
-                    beginTransaction().
-                    replace(R.id.container, UploadImagePreview.newInstance("7055553175", Constants.BASE_URL + getItem(position).getImage(), null, false), MainActivity.UPLOAD_PREVIEW_FRAGMENT).
-                    addToBackStack(MainActivity.MAIN_FRAGMENT).
-                    commit();
+            ((MainActivity)activity).showImagePreview(Constants.BASE_URL + getItem(position).getImage());
         }
 
         public void bindTo(final Post post, int postion) {

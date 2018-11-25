@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -112,15 +113,15 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
      * @return A new instance of fragment UploadImagePreview.
      */
     // TODO: Rename and change types and number of parameters
-    public static UploadImagePreview newInstance(String param1, String param2, Uri uri, Boolean showReceivers) {
+    public static UploadImagePreview newInstance(String param1, String param2, Uri uri, Boolean editable) {
         UploadImagePreview fragment = new UploadImagePreview();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
         args.putParcelable(ARG_PARAM4, uri);
-        args.putBoolean(ARG_PARAM3, showReceivers);
+        args.putBoolean(ARG_PARAM3, editable);
 
-        Log.d("editable", String.valueOf(showReceivers));
+        Log.d("editable", String.valueOf(editable));
         fragment.setArguments(args);
         return fragment;
     }
@@ -381,6 +382,11 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .into(myImage);
 
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
