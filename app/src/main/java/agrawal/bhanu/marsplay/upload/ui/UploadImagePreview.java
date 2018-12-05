@@ -49,6 +49,8 @@ import java.io.IOException;
 
 import agrawal.bhanu.marsplay.MainActivity;
 import agrawal.bhanu.marsplay.R;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -99,29 +101,15 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
     private float initialWitdh;
     private float initialHeight;
     private File imgFile;
+    private NavController navigationController;
 
     public UploadImagePreview() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment UploadImagePreview.
-     */
     // TODO: Rename and change types and number of parameters
-    public static UploadImagePreview newInstance(String param1, String param2, Uri uri, Boolean editable) {
+    public static UploadImagePreview newInstance(Bundle args) {
         UploadImagePreview fragment = new UploadImagePreview();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        args.putParcelable(ARG_PARAM4, uri);
-        args.putBoolean(ARG_PARAM3, editable);
-
-        Log.d("editable", String.valueOf(editable));
         fragment.setArguments(args);
         return fragment;
     }
@@ -132,14 +120,14 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
         if (getArguments() != null) {
             username = getArguments().getString(ARG_PARAM1);
             filePath = getArguments().getString(ARG_PARAM2);
-            editable = getArguments().getBoolean(ARG_PARAM3);
             try {
-                uri = getArguments().getParcelable(ARG_PARAM4);
+                uri = getArguments().getParcelable(ARG_PARAM3);
 
             }
             catch (Exception e){
                 e.printStackTrace();
             }
+            editable = getArguments().getBoolean(ARG_PARAM4);
         }
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
     }
@@ -432,11 +420,20 @@ public class UploadImagePreview extends Fragment implements View.OnTouchListener
                 Bitmap selectedBitmap = extras.getParcelable("data");
                 Uri imageUri = getImageUri(getContext(), selectedBitmap);
                 Fragment frg = getActivity().getSupportFragmentManager().findFragmentByTag(MainActivity.UPLOAD_PREVIEW_FRAGMENT);
-                Fragment updatedFrg = UploadImagePreview.newInstance("7055553175", imageUri.getPath(), imageUri,  true);
                 final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
                 ft.detach(frg);
-                ft.attach(updatedFrg);
                 ft.commit();
+
+
+                navigationController = Navigation.findNavController(getActivity(), R.id.my_nav_host_fragment);
+
+                Bundle bundle = new Bundle();
+                bundle.putString("param1", "7055553175");
+                bundle.putString("param2", imageUri.getPath());
+                bundle.putParcelable("param3", imageUri);
+                bundle.putBoolean("param4", true);
+
+                navigationController.navigate(R.id.uploadImagePreview, bundle);
             }
         }
     }

@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 
+import agrawal.bhanu.marsplay.MainFragment;
 import agrawal.bhanu.marsplay.MyBroadcastReceiver;
 import agrawal.bhanu.marsplay.R;
 import agrawal.bhanu.marsplay.imagelist.PostViewModel;
@@ -199,7 +200,7 @@ public class ImageList extends Fragment{
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.onCameraSelected();
+                ((MainFragment)getParentFragment()).openCamera();
             }
         });
 
@@ -264,8 +265,6 @@ public class ImageList extends Fragment{
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
-
-        void onCameraSelected();
 
         void openImagePreviewFragment(Uri path);
     }
